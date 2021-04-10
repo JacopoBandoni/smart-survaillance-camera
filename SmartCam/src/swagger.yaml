@@ -13,3 +13,11 @@ paths:
       responses:
         200:
           description: Get current time
+
+  /test_photo:
+    get:
+      summary: Test photo service
+      operationId: app.test_photo
+      responses:
+        200:
+          description: Get a photo

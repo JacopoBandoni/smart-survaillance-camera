@@ -4,7 +4,7 @@ import connexion
 import sys
 from datetime import datetime
 
-from flask import current_app
+from flask import current_app, send_file
 """
 The default app configuration: 
 in case a configuration is not found or 
@@ -19,6 +19,10 @@ DEFAULT_CONFIGURATION = {
 
 def time():
     return datetime.now()
+
+def test_photo():
+    return send_file("42.png",mimetype="image/png")
+    
 
 def get_config(configuration=None):
     """ Returns a json file containing the configuration to use in the app
