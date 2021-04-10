@@ -1,0 +1,15 @@
+openapi: 3.0.1
+info:
+  title: SmartCam 
+  description: SmartCam REST API
+  version: "0.1"
+servers:
+- url: /
+paths:
+  /time:
+    get:
+      summary: Get current time
+      operationId: app.time
+      responses:
+        200:
+          description: Get current time
