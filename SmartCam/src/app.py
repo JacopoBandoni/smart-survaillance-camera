@@ -1,10 +1,16 @@
 import configparser
 import logging
-import connexion
 import sys
-from datetime import datetime
+import time
 
-from flask import current_app, send_file
+from datetime import date, datetime
+
+import connexion
+from flask import current_app, send_file, Response
+
+from src.camera import IPCamera
+
+
 """
 The default app configuration: 
 in case a configuration is not found or 
@@ -22,6 +28,26 @@ def time():
 
 def test_photo():
     return send_file("42.png",mimetype="image/png")
+
+def photo():
+    frame = IPCamera("192.168.1.6:8080").get_frame()
+    return Response((b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+def gen(camera):
+    start = 0
+    end = 0
+    avg = 0
+    cnt = 0
+    while True:
+        cnt++
+        frame =  camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+def video():
+   return Response(gen(IPCamera("192.168.1.6:8080")),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
     
 
 def get_config(configuration=None):

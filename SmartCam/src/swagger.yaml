@@ -21,3 +21,19 @@ paths:
       responses:
         200:
           description: Get a photo
+  /photo:
+    get:
+      summary: Photo service
+      operationId: app.photo
+      responses:
+        200:
+          description: Get a photo
+
+
+  /video:
+    get:
+      summary: Photo service
+      operationId: app.video
+      responses:
+        200:
+          description: Get a photo
