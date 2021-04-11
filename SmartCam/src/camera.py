@@ -8,9 +8,6 @@ class IPCamera:
     def get_frame(self):
         frame = requests.get("http://"+self._ip+"/shot.jpg")
         return frame.content
-        with open('shot.jpg', 'wb+') as f:
-             f.write(frame.content)
-        del frame
 
 
 if __name__ == "__main__":
