@@ -1,0 +1,47 @@
+openapi: 3.0.1
+info:
+  title: SmartCam 
+  description: SmartCam REST API
+  version: "0.1"
+servers:
+- url: /
+paths:
+  /time:
+    get:
+      summary: Get current time
+      operationId: app.time
+      responses:
+        200:
+          description: Get current time
+
+  /test_photo:
+    get:
+      summary: Test photo service
+      operationId: app.test_photo
+      responses:
+        200:
+          description: Get a photo
+  /photo:
+    get:
+      summary: Photo service
+      operationId: app.photo
+      responses:
+        200:
+          description: Get a photo
+
+
+  /video:
+    get:
+      summary: Photo service
+      operationId: app.video
+      responses:
+        200:
+          description: Get a photo
+
+  /video_feed:
+    get:
+      summary: Photo service
+      operationId: app.video_feed
+      responses:
+        200:
+          description: Get a photo

@@ -1,0 +1,7 @@
+connexion[swagger-ui]
+Flask
+requests
+camera
+numpy
+opencv-python
+ffmpeg
