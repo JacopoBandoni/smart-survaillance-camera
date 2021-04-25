@@ -1,0 +1,94 @@
+openapi: 3.0.1
+info:
+  title: Server 
+  description: Server REST API
+  version: "0.1"
+servers:
+- url: /
+paths:
+  /frames:
+    get:
+      tags:
+        - Frames
+      summary: Return a streams of frames
+      operationId: app.get_frames
+      parameters:
+        - in: query
+          name: source
+          description: The source of the stream
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: begin
+          description: Begin of the stream
+          schema:
+            type: string
+            format: date-time
+          required: false
+        - in: query
+          name: end
+          description: End of the stream
+          schema:
+            type: string
+            format: date-time
+          required: false
+      responses:
+        200:
+          description: A frame of the stream
+        400:
+          description: Bad Request
+        404:
+          description: No Stream Found
+        500: 
+          description: Server error (try again)
+    post:
+      tags: 
+        - Frames
+      summary: Store a frame
+      operationId: app.new_frame
+      parameters:
+        - in: header
+          name: Frame-Source-ID
+          description: Source identifier
+          schema:
+            type: string
+          required: true
+        - in: header
+          name: Frame-Timestamp
+          description: Timestamp of frame capture
+          schema:
+            type: string
+            format: date-time
+          required: true
+      requestBody:
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+      responses:
+        201:
+          description: Frame stored
+        400:
+          description: Bad Request
+        500: 
+          description: Server error (try again)
+  /frames/{frame_id}:
+    get:
+      tags:
+        - Frame
+      summary: Get a frame
+      operationId: app.get_frame
+      parameters:
+        - name: frame_id
+          in: path
+          description: Frame's Unique Identifier
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200': 
+          description: Return the frame
+        '404':
+          description: Frame not found

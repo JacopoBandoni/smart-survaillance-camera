@@ -51,25 +51,11 @@ def video():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def gen2():
-    cap = cv2.VideoCapture("a.mp4")
-    # sorgenti video alternative 
-    #cap = cv2.VideoCapture("a.avi")
-    #cap = cv2.VideoCapture(0)
-    
-    if not (cap.isOpened()):
-        print("Could not open video device")
-
-    
-    while(cap.isOpened()):
-        ret, frame = cap.read()
-        
-        print("stampo risultato cap.read")
-        print(ret)
-        
-        # codifica jpeg
-        #encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-        #result, encimg = cv2.imencode('.jpg', frame, encode_param)
-        
+    cap = cv2.VideoCapture('a.mp4')
+    while(True):
+        _, img = cap.read()
+        _, frame = cv2.imencode('.jpeg', img)
+        frame = frame.tostring()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
                
