@@ -44,7 +44,7 @@ def stream(frames, directory):
                b'Content-Type: image/jpeg\r\n\r\n' + f.read() + b'\r\n')
             
 
-def get_frames(source, begin=None, end=None):
+def get_frames(source, begin=None, end=None, metadata=False):
     """ Return a stream of frames of a given source in a given period.
 
     GET /frames?[source=S_ID&][begin=BEGING_DT&][end=END_DT&]
@@ -56,6 +56,7 @@ def get_frames(source, begin=None, end=None):
     - source: The id of the source of the stream
     - begin: All frames from a certain date onwards (format %Y-%m-%d %H:%M:%S.%f)
     - end: All frames up to a certain date onwards (format %Y-%m-%d %H:%M:%S.%f)
+    - metadata: Return only the metadata of the frames
     
     If begin and not end is specified, all those starting from begin are taken. Same thing for end.
     Status Codes:
@@ -85,9 +86,11 @@ def get_frames(source, begin=None, end=None):
     if q.first() is None:
         return Error404("No Stream Found").get()
     
-
-    return Response(stream(q, current_app.config['FRAMES_DIR']),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    if metadata:
+        return [p.dump() for p in q], 200
+    else:
+        return Response(stream(q, current_app.config['FRAMES_DIR']),
+                mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 def new_frame():
