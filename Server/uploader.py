@@ -2,7 +2,7 @@ import requests
 import datetime
 import cv2
 
-url = 'http://localhost:5000/frames'
+url = 'https://mcpserver.eu.pythonanywhere.com/frames'
 
 with open('42.png', 'rb') as f:
     frame = f.read()
