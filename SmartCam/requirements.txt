@@ -1,4 +1,4 @@
 connexion[swagger-ui]
 Flask
 requests
-picamera
+opencv-python

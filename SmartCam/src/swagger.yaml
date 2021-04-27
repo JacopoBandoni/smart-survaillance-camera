@@ -6,34 +6,41 @@ info:
 servers:
 - url: /
 paths:
-  /time:
-    get:
-      summary: Get current time
-      operationId: app.time
-      responses:
-        200:
-          description: Get current time
-
-  /test_photo:
-    get:
-      summary: Test photo service
-      operationId: app.test_photo
-      responses:
-        200:
-          description: Get a photo
   /photo:
     get:
-      summary: Photo service
+      summary: Get the current frame
       operationId: app.photo
       responses:
         200:
-          description: Get a photo
-
+          description: Get the current frame
 
   /video:
     get:
-      summary: Photo service
+      summary: Get the stream of local frame
       operationId: app.video
+      parameters:
+        - in: query
+          name: begin
+          description: Begin of the stream
+          schema:
+            type: string
+            format: date-time
+          required: false
+        - in: query
+          name: end
+          description: End of the stream
+          schema:
+            type: string
+            format: date-time
+          required: false
       responses:
         200:
-          description: Get a photo
+          description: Get the local stream
+
+  /live:
+    get:
+      summary: Live streaming
+      operationId: app.live
+      responses:
+        200:
+          description: Get a live stream
