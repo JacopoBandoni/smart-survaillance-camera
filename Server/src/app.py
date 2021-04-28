@@ -21,20 +21,19 @@ some data is missing
 DEFAULT_CONFIGURATION = { 
 
     "IP": "0.0.0.0", # the app ip
-    "PORT": 8080, # the app port
-    "DEBUG":True, # set debug mode
+    "PORT": 5000, # the app port
+    "DEBUG":False, # set debug mode
     "FRAMES_DIR": "./frames",
-    "DB_DROPALL": False,
+    "DB_DROPALL": True,
     "SQLALCHEMY_DATABASE_URI": "frames.db", # the database path/name
     "SQLALCHEMY_TRACK_MODIFICATIONS": False,
 }
 
-ALLOWED_CONTENT_TYPE = {'image/png'}
+ALLOWED_CONTENT_TYPE = {'image/jpeg'}
 
 def stream(frames, directory):
     for frame in frames:
-        print(frame)
-        with open(directory+"/"+str(frame.id)+".png", "rb") as f:
+        with open(directory+"/"+str(frame.id)+".jpeg", "rb") as f:
 
             yield (b'--frame\r\n'
                b'Frame-ID: '+str.encode(str(frame.id))+b'\r\n'
@@ -110,17 +109,16 @@ def new_frame():
     if request.content_type in ALLOWED_CONTENT_TYPE:
         source_id = connexion.request.headers['Frame-Source-ID']
         try:
-            print(connexion.request.headers['Frame-Timestamp'])
             frame_timestamp = datetime.strptime(connexion.request.headers['Frame-Timestamp'], '%Y-%m-%d %H:%M:%S.%f')
         except:
             return Error400("Frame-Timestamp is not a valid datetime").get()
         
-        frame = store_frame(source_id, frame_timestamp)
+        frame = store_frame(source_id, frame_timestamp, sys.getsizeof(request.get_data()))
 
         if frame is None:
             return Error500().get()
         
-        with open(current_app.config['FRAMES_DIR']+"/"+str(frame.id)+".png", 'wb+') as f:
+        with open(current_app.config['FRAMES_DIR']+"/"+str(frame.id)+".jpeg", 'wb+') as f:
             f.write(request.get_data()) 
 
         return frame.dump(), 201
@@ -139,10 +137,10 @@ def get_frame(frame_id):
         return Error404("Frame not found").get()
     
     try:
-        with open(current_app.config['FRAMES_DIR']+"/"+str(frame.id)+".png", "rb") as f:
+        with open(current_app.config['FRAMES_DIR']+"/"+str(frame.id)+".jpeg", "rb") as f:
             return Response(f.read(), 
                 headers = {
-                "Content-Type":"image/png",
+                "Content-Type":"image/jpeg",
                 "Frame-ID":frame.id,
                 "Frame-Source-ID":frame.source,
                 "Frame-Timestamp":frame.frame_timestamp,

@@ -18,10 +18,12 @@ import time
 
 # try read write lock
 
-THIS_CAMERA = VirtualCamera("./src/a.mp4")#IPCamera("192.168.1.6:8080")
+ID = "raspberry"
+
+THIS_CAMERA = VirtualCamera(ID,"./src/a.mp4")#IPCamera("192.168.1.6:8080")
 SERVER_URL = None #"https://mcpserver.eu.pythonanywhere.com/frames" 
 CAP_TIMER = 5
-SERVER_TIMER = 10  
+SERVER_TIMER = 10
 SERVER_RATIO = 4
 
 """
@@ -40,7 +42,7 @@ def live_stream():
         frame = THIS_CAMERA.get_frame()
         yield (b'--frame\r\n'
                b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
-               b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 def local_stream(begin=None, end=None):
     frames = [f for f in os.listdir("./frames") if os.path.isfile(os.path.join("./frames", f))]
@@ -69,13 +71,13 @@ def local_stream(begin=None, end=None):
                 frame = f.read()
             yield (b'--frame\r\n'
                 b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
-                b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 def photo():
     frame = THIS_CAMERA.get_frame()
     return Response((b'--frame\r\n'
                b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
-               b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n'),
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def last():
@@ -96,7 +98,7 @@ def last():
         frame = f.read()
     return Response((b'--frame\r\n'
                b'Frame-Timestamp: '+str.encode((last_frame.split("."))[0])+b'\r\n'
-               b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n'),
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def live():
@@ -113,7 +115,11 @@ def get_controller():
         "server_url": current_app.config["SERVER_URL"],
         "server_timer": current_app.config["SERVER_TIMER"],
         "server_ratio": current_app.config["SERVER_RATIO"],
+        "online_from": current_app.config["ONLINE_FROM"],
+        "last_cap": current_app.config["LAST_CAP"],
+        "last_sending": current_app.config["LAST_SENDING"],
     }
+    
     current_app.config["CONTROLLER_LOCK"].release()
     return config
 
@@ -200,6 +206,10 @@ def setup(application, config):
     application.config["LAST_FRAME"] = None
     application.config["LAST_FRAME_LOCK"] = threading.Lock()
     application.config["CONTROLLER_LOCK"] = threading.Lock()
+
+    application.config["ONLINE_FROM"] = str(datetime.now())
+    application.config["LAST_CAP"] = None
+    application.config["LAST_SENDING"] = None
     
 
 def create_app(configuration=None):

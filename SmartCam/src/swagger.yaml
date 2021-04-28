@@ -114,3 +114,4 @@ components:
             nullable: true
             description: Maximum ratio between frames stored and sent to the server
             example: 4
+            

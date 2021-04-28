@@ -38,21 +38,35 @@ def worker(app):
             print("WORKER: Click!")
             now = datetime.datetime.now()
             cnt += 1
+
+            current_app.config["CONTROLLER_LOCK"].acquire()
+            current_app.config["LAST_CAP"] = str(now)
+            old_last_sending = current_app.config["LAST_SENDING"]
+            current_app.config["CONTROLLER_LOCK"].release()
             
+            last_sending = old_last_sending
+
             if(now - last_timer >= tdelta or cnt >= server_ratio):
                 print("WORKER: Sending...")
                 try:
                     requests.post(server_url, data=frame, headers={
-                        "Content-Type":"image/png",
+                        "Content-Type":"image/jpeg",
                         "Frame-Source-ID":str(camera.get_id()),
                         "Frame-Timestamp":str(now)
                     })
+                    last_sending = str(datetime.datetime.now())
                 except:
                     print("WORKER: Server "+str(server_url)+" N/A")
+                    last_sending = old_last_sending
+                
                 last_timer = now
                 cnt = 0
 
-            filename = str(now.strftime("%Y-%m-%d--%H-%M-%S-%f"))+".png"
+                current_app.config["CONTROLLER_LOCK"].acquire()
+                current_app.config["LAST_SENDING"] = last_sending
+                current_app.config["CONTROLLER_LOCK"].release()
+
+            filename = str(now.strftime("%Y-%m-%d--%H-%M-%S-%f"))+".jpeg"
 
             with open("./frames/"+filename, 'wb+') as f:
                 f.write(frame) 

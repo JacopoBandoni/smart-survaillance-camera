@@ -14,6 +14,7 @@ class Frame(db.Model):
     source = db.Column(db.String)
     frame_timestamp = db.Column(db.DateTime)
     uploading_timestamp = db.Column(db.DateTime)
+    size = db.Column(db.Integer)
 
     def dump(self):
         """ Return a db record as a dict """
@@ -22,7 +23,7 @@ class Frame(db.Model):
         return d
 
 
-def store_frame(source, timestamp):
+def store_frame(source, timestamp, size):
     """ Store a new reservation 
     
     Return the frame record, otherwise
@@ -33,6 +34,7 @@ def store_frame(source, timestamp):
         frame.source = source
         frame.frame_timestamp = timestamp
         frame.uploading_timestamp = datetime.datetime.now()
+        frame.size = size
         db.session.add(frame)
         db.session.commit()
         return frame
