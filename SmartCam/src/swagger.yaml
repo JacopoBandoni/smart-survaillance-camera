@@ -8,14 +8,30 @@ servers:
 paths:
   /photo:
     get:
+      tags:
+        - Viewer
       summary: Get the current frame
       operationId: app.photo
       responses:
         200:
           description: Get the current frame
 
+  /last:
+    get:
+      tags:
+        - Viewer
+      summary: Get the last stored frame
+      operationId: app.last
+      responses:
+        200:
+          description: Get the last stored frame
+        404:
+          description: No Frame Stored
+
   /video:
     get:
+      tags:
+        - Viewer
       summary: Get the stream of local frame
       operationId: app.video
       parameters:
@@ -39,8 +55,62 @@ paths:
 
   /live:
     get:
+      tags:
+        - Viewer
       summary: Live streaming
       operationId: app.live
       responses:
         200:
           description: Get a live stream
+
+  /controller:
+    get:
+      tags:
+        - Controller
+      summary: Get the SmartCam Configuration
+      operationId: app.get_controller
+      responses:
+        200:
+          description: Get the SmartCam Configuration
+    post:
+      tags:
+        - Controller
+      summary: Change the SmartCam Configuration
+      operationId: app.post_controller
+      requestBody:
+        required: true
+        content:
+          application/json:
+              schema:
+                $ref: '#/components/schemas/Controller'
+      responses:
+        200:
+          description: SmartCam Configuration changed
+        400:
+          description: Bad request
+
+components:
+  schemas:
+    Controller:
+      type: object
+      properties:
+        cap_timer:
+          type: number
+          nullable: true
+          description: Time between two captures
+          example: 5
+        server_url:
+            type: string
+            nullable: true
+            description: The server's url
+            example: "https://mcpserver.eu.pythonanywhere.com/frames"
+        server_timer:
+            type: number
+            nullable: true
+            description: Time between two mailings to the server
+            example: 10
+        server_ratio:
+            type: integer
+            nullable: true
+            description: Maximum ratio between frames stored and sent to the server
+            example: 4

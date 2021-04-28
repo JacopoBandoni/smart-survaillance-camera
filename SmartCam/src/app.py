@@ -3,21 +3,20 @@ import logging
 import sys
 import os
 
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
 import threading
-
-from werkzeug.utils import append_slash_redirect
 
 import connexion
 from flask import current_app, Response
 
-from src.camera import IPCamera, VirtualCamera
+from src.camera import *
 
 from src.worker import worker
 
-import requests
 import time
+
+# try read write lock
 
 THIS_CAMERA = VirtualCamera("./src/a.mp4")#IPCamera("192.168.1.6:8080")
 SERVER_URL = None #"https://mcpserver.eu.pythonanywhere.com/frames" 
@@ -43,15 +42,34 @@ def live_stream():
                b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
                b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n')
 
-def local_stream():
+def local_stream(begin=None, end=None):
     frames = [f for f in os.listdir("./frames") if os.path.isfile(os.path.join("./frames", f))]
-    frames.sort()
-    for filename in frames:
-        with open("./frames/"+filename,"rb") as f:
-            frame = f.read()
-        yield (b'--frame\r\n'
-               b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
-               b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n')
+    frames = list(map(lambda filename: 
+        (filename,datetime.strptime((filename.split("."))[0],"%Y-%m-%d--%H-%M-%S-%f")),
+        frames))
+    frames.sort(key = lambda frame: frame[1])
+
+    if begin is not None:
+        try:
+            begin = datetime.strptime(begin, '%Y-%m-%d %H:%M:%S.%f')
+        except:
+            pass
+
+    if end is not None:
+        try:
+            end = datetime.strptime(end, '%Y-%m-%d %H:%M:%S.%f')
+        except:
+            pass
+
+    for (filename,timestamp) in frames:
+        if begin is None or timestamp >= begin:
+            if end is not None and timestamp >= end:
+                break
+            with open("./frames/"+filename,"rb") as f:
+                frame = f.read()
+            yield (b'--frame\r\n'
+                b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
+                b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n')
 
 def photo():
     frame = THIS_CAMERA.get_frame()
@@ -60,11 +78,63 @@ def photo():
                b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n'),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+def last():
+    last_frame = current_app.config["LAST_FRAME"]
+    if last_frame is None:
+        frames = os.listdir('./frames')
+        if not frames:
+           return '',404 
+        else:
+            paths = [os.path.join('./frames', basename) for basename in frames]
+            last_frame = max(paths, key=os.path.getctime)[8:]
+            current_app.config["LAST_FRAME_LOCK"].acquire()
+            current_app.config["LAST_FRAME"] = last_frame
+            current_app.config["LAST_FRAME_LOCK"].release()
+            
+    
+    with open("./frames/"+last_frame,"rb") as f:
+        frame = f.read()
+    return Response((b'--frame\r\n'
+               b'Frame-Timestamp: '+str.encode((last_frame.split("."))[0])+b'\r\n'
+               b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n'),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
 def live():
    return Response(live_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-def video():
-    return Response(local_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
+def video(begin=None, end=None):
+    return Response(local_stream(begin, end), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+def get_controller():
+    current_app.config["CONTROLLER_LOCK"].acquire()
+    config = {
+        "camera": current_app.config["THIS_CAMERA"].get_id(),
+        "cap_timer": current_app.config["CAP_TIMER"],
+        "server_url": current_app.config["SERVER_URL"],
+        "server_timer": current_app.config["SERVER_TIMER"],
+        "server_ratio": current_app.config["SERVER_RATIO"],
+    }
+    current_app.config["CONTROLLER_LOCK"].release()
+    return config
+
+def post_controller():
+    req = connexion.request.json
+    current_app.config["CONTROLLER_LOCK"].acquire()
+
+    if "cap_timer" in req and req["cap_timer"] is not None:
+        current_app.config["CAP_TIMER"] = req["cap_timer"]
+
+    if "server_url" in req:
+        current_app.config["SERVER_URL"] = req["server_url"]
+
+    if "server_timer" in req and req["server_timer"] is not None:
+        current_app.config["SERVER_TIMER"] = req["server_timer"]
+
+    if "server_ratio" in req and req["server_ratio"] is not None:
+        current_app.config["SERVER_RATIO"] = req["server_ratio"]
+
+    current_app.config["CONTROLLER_LOCK"].release()
+
 
 def get_config(configuration=None):
     """ Returns a json file containing the configuration to use in the app
@@ -127,6 +197,9 @@ def setup(application, config):
     application.config["CAP_TIMER"] = CAP_TIMER
     application.config["SERVER_TIMER"] = SERVER_TIMER
     application.config["SERVER_RATIO"] = SERVER_RATIO
+    application.config["LAST_FRAME"] = None
+    application.config["LAST_FRAME_LOCK"] = threading.Lock()
+    application.config["CONTROLLER_LOCK"] = threading.Lock()
     
 
 def create_app(configuration=None):
@@ -156,13 +229,6 @@ if __name__ == '__main__':
 
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true": #execute only one time in debug mode (after the reload)            
         threading.Thread(target=worker, args=(app,)).start()
-
-        def f(app):
-            time.sleep(15)
-            with app.app.app_context():
-                current_app.config["CAP_TIMER"] = 2
-            print("hello")
-        threading.Thread(target=f, args=(app,)).start()
 
     with app.app.app_context():
         app.run(
