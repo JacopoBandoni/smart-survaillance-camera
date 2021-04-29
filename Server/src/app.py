@@ -40,6 +40,7 @@ def stream(frames, directory):
                b'Frame-Source-ID: '+str.encode(str(frame.source))+b'\r\n'
                b'Frame-Timestamp: '+str.encode(str(frame.frame_timestamp))+b'\r\n'
                b'Frame-Uploading-Timestamp: '+str.encode(str(frame.uploading_timestamp))+b'\r\n'
+               b'Frame-Size: '+str.encode(str(frame.size))+b'\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + f.read() + b'\r\n')
             
 
@@ -144,7 +145,8 @@ def get_frame(frame_id):
                 "Frame-ID":frame.id,
                 "Frame-Source-ID":frame.source,
                 "Frame-Timestamp":frame.frame_timestamp,
-                "Frame-Uploading-Timestamp": frame.uploading_timestamp
+                "Frame-Uploading-Timestamp": frame.uploading_timestamp,
+                "Frame-Size": frame.size,
                 })
     except:
         return Error404("Frame's data not found").get() 
