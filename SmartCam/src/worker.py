@@ -48,17 +48,17 @@ def worker(app, frames_dir):
             print("WORKER: Click!")
 
 
-            difference = 1
+            difference = 0
 
-            if threshold > 0:
+            if threshold < 1:
                 last = current_app.config["LAST_FRAME"]
                 if last is not None:
                     last = cv2.imread(current_app.config["FRAMES_DIR"]+"/"+last)
                     new = cv2.imdecode(np.fromstring(frame, np.uint8), cv2.IMREAD_COLOR)
                     difference = compare(last, new)
-                    print(difference)
+                    print("WORKER: Difference: "+str(difference))
 
-            if difference > threshold:
+            if difference <= threshold:
                 
                 now = datetime.datetime.now()
                 cnt += 1
@@ -101,7 +101,7 @@ def worker(app, frames_dir):
                 current_app.config["LAST_FRAME_LOCK"].release()
 
             else:
-                print("WORKER: Below the threshold...")
+                print("WORKER: Above the threshold ("+str(threshold)+")...")
 
 if __name__ == "__main__":
     from camera import IPCamera, VirtualCamera
