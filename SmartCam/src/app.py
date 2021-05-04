@@ -14,17 +14,16 @@ from src.camera import *
 
 from src.worker import worker
 
-import time
-
-# try read write lock
 
 ID = "raspberry"
-
-THIS_CAMERA = VirtualCamera(ID,"./src/a.mp4")#IPCamera("192.168.1.6:8080")
-SERVER_URL = None #"https://mcpserver.eu.pythonanywhere.com/frames" 
+THIS_CAMERA = None #IPCamera("192.168.1.6:8080")
+SERVER_URL = "http://localhost:5000/frames" #"https://mcpserver.eu.pythonanywhere.com/frames" 
 CAP_TIMER = 5
 SERVER_TIMER = 10
 SERVER_RATIO = 4
+THRESHOLD = 0
+
+FRAMES_DIR = None
 
 """
 The default app configuration: 
@@ -35,17 +34,18 @@ DEFAULT_CONFIGURATION = {
     "IP": "0.0.0.0", # the app ip
     "PORT": 8080, # the app port
     "DEBUG":True, # set debug mode
+    "ID": ID
 }
 
-def live_stream():
+def live_stream(camera):
     while True:
-        frame = THIS_CAMERA.get_frame()
+        frame = camera.get_frame()
         yield (b'--frame\r\n'
                b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-def local_stream(begin=None, end=None):
-    frames = [f for f in os.listdir("./frames") if os.path.isfile(os.path.join("./frames", f))]
+def local_stream(frames_dir,begin=None, end=None):
+    frames = [f for f in os.listdir(frames_dir) if os.path.isfile(os.path.join(frames_dir, f))]
     frames = list(map(lambda filename: 
         (filename,datetime.strptime((filename.split("."))[0],"%Y-%m-%d--%H-%M-%S-%f")),
         frames))
@@ -67,14 +67,14 @@ def local_stream(begin=None, end=None):
         if begin is None or timestamp >= begin:
             if end is not None and timestamp >= end:
                 break
-            with open("./frames/"+filename,"rb") as f:
+            with open(frames_dir+"/"+filename,"rb") as f:
                 frame = f.read()
             yield (b'--frame\r\n'
                 b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 def photo():
-    frame = THIS_CAMERA.get_frame()
+    frame = current_app.config["THIS_CAMERA"].get_frame()
     return Response((b'--frame\r\n'
                b'Frame-Timestamp: '+str.encode(str(datetime.now()))+b'\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'),
@@ -83,18 +83,18 @@ def photo():
 def last():
     last_frame = current_app.config["LAST_FRAME"]
     if last_frame is None:
-        frames = os.listdir('./frames')
+        frames = os.listdir(current_app.config["FRAMES_DIR"])
         if not frames:
            return '',404 
         else:
-            paths = [os.path.join('./frames', basename) for basename in frames]
-            last_frame = max(paths, key=os.path.getctime)[8:]
+            paths = [os.path.join(current_app.config["FRAMES_DIR"], basename) for basename in frames]
+            last_frame = ((max(paths, key=os.path.getctime)).split("/"))[-1]
             current_app.config["LAST_FRAME_LOCK"].acquire()
             current_app.config["LAST_FRAME"] = last_frame
             current_app.config["LAST_FRAME_LOCK"].release()
             
     
-    with open("./frames/"+last_frame,"rb") as f:
+    with open(current_app.config["FRAMES_DIR"]+"/"+last_frame,"rb") as f:
         frame = f.read()
     return Response((b'--frame\r\n'
                b'Frame-Timestamp: '+str.encode((last_frame.split("."))[0])+b'\r\n'
@@ -102,10 +102,10 @@ def last():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def live():
-   return Response(live_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
+   return Response(live_stream(current_app.config["THIS_CAMERA"]), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def video(begin=None, end=None):
-    return Response(local_stream(begin, end), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(local_stream(current_app.config["FRAMES_DIR"], begin, end), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def get_controller():
     current_app.config["CONTROLLER_LOCK"].acquire()
@@ -118,6 +118,7 @@ def get_controller():
         "online_from": current_app.config["ONLINE_FROM"],
         "last_cap": current_app.config["LAST_CAP"],
         "last_sending": current_app.config["LAST_SENDING"],
+        "threshold":current_app.config["THRESHOLD"]
     }
     
     current_app.config["CONTROLLER_LOCK"].release()
@@ -138,6 +139,9 @@ def post_controller():
 
     if "server_ratio" in req and req["server_ratio"] is not None:
         current_app.config["SERVER_RATIO"] = req["server_ratio"]
+
+    if "threshold" in req and req["threshold"] is not None:
+        current_app.config["THRESHOLD"] = req["threshold"]
 
     current_app.config["CONTROLLER_LOCK"].release()
 
@@ -198,6 +202,8 @@ def setup(application, config):
     for k,v in config.items():
         application.config[k] = v # insert the requested configuration in the app configuration
 
+    global THIS_CAMERA
+    THIS_CAMERA = VirtualCamera(application.config["ID"],"./src/a.mp4")
     application.config["THIS_CAMERA"] = THIS_CAMERA
     application.config["SERVER_URL"] = SERVER_URL
     application.config["CAP_TIMER"] = CAP_TIMER
@@ -210,6 +216,12 @@ def setup(application, config):
     application.config["ONLINE_FROM"] = str(datetime.now())
     application.config["LAST_CAP"] = None
     application.config["LAST_SENDING"] = None
+
+    global FRAMES_DIR
+    FRAMES_DIR = "./frames-"+THIS_CAMERA.get_id()
+    application.config["FRAMES_DIR"] = FRAMES_DIR
+
+    application.config["THRESHOLD"] = THRESHOLD
     
 
 def create_app(configuration=None):
@@ -237,8 +249,8 @@ if __name__ == '__main__':
 
     app = create_app(c)
 
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true": #execute only one time in debug mode (after the reload)            
-        threading.Thread(target=worker, args=(app,)).start()
+    if (not app.app.config["DEBUG"]) or os.environ.get("WERKZEUG_RUN_MAIN") == "true": #execute only one time in debug mode (after the reload)            
+        threading.Thread(target=worker, args=(app,FRAMES_DIR)).start()
 
     with app.app.app_context():
         app.run(

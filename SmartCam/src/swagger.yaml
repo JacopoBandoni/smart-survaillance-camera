@@ -114,4 +114,13 @@ components:
             nullable: true
             description: Maximum ratio between frames stored and sent to the server
             example: 4
+        threshold:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+          description: Threshold for processing a new image
+          example: 0.95
+
+
             

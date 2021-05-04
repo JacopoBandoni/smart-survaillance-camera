@@ -2,3 +2,4 @@ connexion[swagger-ui]
 Flask
 requests
 opencv-python
+scikit-image
