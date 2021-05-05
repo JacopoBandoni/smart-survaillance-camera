@@ -3,3 +3,4 @@ Flask
 requests
 opencv-python
 scikit-image
+python-psutil
