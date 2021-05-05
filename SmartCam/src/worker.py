@@ -2,11 +2,34 @@ import os
 import time
 import datetime
 import requests
+import psutil
 
 from skimage.metrics import structural_similarity as ssim
 import cv2
 
 import numpy as np
+
+MIN_KB = 1024.0
+EPS = 0.1
+
+def free_disk(frames_dir):
+    try:
+        available_kb = round(psutil.disk_usage('/').free/1024.0,1)
+        if available_kb < MIN_KB:
+            frames = [f for f in os.listdir(frames_dir) if os.path.isfile(os.path.join(frames_dir, f))]
+            frames = list(map(lambda filename: 
+                (filename,datetime.datetime.strptime((filename.split("."))[0],"%Y-%m-%d--%H-%M-%S-%f")),
+                frames))
+            frames.sort(key = lambda frame: frame[1], reverse=True)
+            while available_kb < (MIN_KB + (MIN_KB*EPS)):
+                try:
+                    (file,_) = frames.pop()
+                    os.remove(frames_dir+"/"+file)
+                    available_kb = round(psutil.disk_usage('/').free/1024.0,1)
+                except:
+                    break
+    except:
+        pass
 
 def compare(imgA, imgB):
     return ssim(imgA, imgB, multichannel=True)
@@ -95,6 +118,8 @@ def worker(app, frames_dir):
                 with open(frames_dir+"/"+filename, 'wb+') as f:
                     f.write(frame) 
 
+                free_disk(frames_dir)
+
                 current_app.config["LAST_FRAME_LOCK"].acquire()
                 current_app.config["LAST_FRAME"] = filename
                 current_app.config["LAST_FRAME_LOCK"].release()
@@ -104,5 +129,4 @@ def worker(app, frames_dir):
                 pass
 
 if __name__ == "__main__":
-    from camera import IPCamera, VirtualCamera
-    worker(VirtualCamera("./src/a.mp4"),None,5,10,4) #"https://mcpserver.eu.pythonanywhere.com/frames"
+    free_disk("./frames-raspberry")
