@@ -5,6 +5,7 @@ import sys
 import datetime
 import math
 import json
+import statistics
 
 
 def get_cpu_temperature():
@@ -41,9 +42,8 @@ def get_status():
         }  
     }
 
-def get_report():
+def get_report(report_file):
     report = []
-    report_file = "probe-report.txt"
 
     with open(report_file, "r") as f:
         lines = f.readlines()
@@ -53,7 +53,41 @@ def get_report():
 
     return report
 
+def process_report(report, analysis_file):
+
+    analysis = {}
+
+    for record in report:
+        for field,attributes in record.items():
+            if field != "timestamp":
+                if field not in analysis:
+                    analysis[field] = {}
+                for k,v in attributes.items():
+                    if v is not None:
+                        if k in analysis[field]:
+                            (analysis[field][k]).append(v)
+                        else:
+                            analysis[field][k] = [v]
+
+    for field,attributes in analysis.items():
+        for k,a in attributes.items():
+            if len(a) != 0:
+                analysis[field][k] = {
+                    "values": a,
+                    "min": min(a),
+                    "max": max(a),
+                    "avg": statistics.fmean(a),
+                    "stdev": statistics.stdev(a)
+                }
+    with open(analysis_file, "w+") as f:
+        f.write(json.dumps(analysis))
+    
+    return analysis
+
 if __name__ == "__main__":
+
+    process_report(get_report("probe-report.txt"), "probe-analysis.txt")
+    exit(0)
 
     report = "probe-report.txt"
     delta = 1
