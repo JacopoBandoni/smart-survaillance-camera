@@ -1,3 +1,4 @@
+from os import stat
 import psutil
 import time
 import psutil
@@ -6,6 +7,8 @@ import datetime
 import math
 import json
 import statistics
+
+SAMPLE_TIME = 0.1
 
 
 def get_cpu_temperature():
@@ -26,7 +29,7 @@ def get_status():
     return {
         "timestamp": str(datetime.datetime.now()),
         "cpu":{
-            "percent": psutil.cpu_percent(0.1),
+            "percent": psutil.cpu_percent(SAMPLE_TIME),
             "frequency": psutil.cpu_freq().current,
 	        "temperature": get_cpu_temperature(),
         },
@@ -53,7 +56,7 @@ def get_report(report_file):
 
     return report
 
-def process_report(report, analysis_file):
+def process_report(report):
 
     analysis = {}
 
@@ -73,45 +76,84 @@ def process_report(report, analysis_file):
         for k,a in attributes.items():
             if len(a) != 0:
                 analysis[field][k] = {
-                    "values": a,
+                    #"values": a,
                     "min": min(a),
                     "max": max(a),
                     "avg": statistics.fmean(a),
                     "stdev": statistics.stdev(a)
                 }
-    with open(analysis_file, "w+") as f:
-        f.write(json.dumps(analysis))
     
     return analysis
 
 if __name__ == "__main__":
 
-    process_report(get_report("probe-report.txt"), "probe-analysis.txt")
-    exit(0)
-
-    report = "probe-report.txt"
     delta = 1
-    end = math.inf
+    end = 60
+    verbose = False
+    report_file = "probe-report.txt"
+    analysis_file = "probe-analysis.txt"
+
     try:
         delta = float(sys.argv[1])
     except:
         pass
+
     try:
-        end = int(sys.argv[2])
+        t =sys.argv[2]
+        if t == "inf":
+            end = math.inf
+        else:
+            end = int(t)
     except:
         pass
 
-    with open(report, "w+") as f:
+    try:
+        if sys.argv[3] == "t":
+            verbose = True
+    except:
         pass
+
+    try:
+        report_file = sys.argv[4]
+    except:
+        pass
+
+    try:
+        analysis_file = sys.argv[5]
+    except:
+        pass
+
+    with open(report_file, "w+") as f:
+        pass
+
+    if delta > SAMPLE_TIME:
+        delta -= SAMPLE_TIME
+    else:
+        delta = 0
+
+    print("*** Starting probing...")
+    print(f"*** Sampling {end} times")
+    print(f"*** Waiting {delta}s (sample time {SAMPLE_TIME}s - total {delta+SAMPLE_TIME}s)")
+    print(f"*** Reporting on {report_file}")
+    print(f"*** Analysis on {analysis_file}")
+    print(f"*** Verbose: {verbose}")
+    print()
 
     i = 0
     while i < end:
         time.sleep(delta)
-        with open(report, "a+") as f:
-            f.write(json.dumps(get_status()))
+        status = get_status()
+        if verbose:
+            print(status)
+        with open(report_file, "a+") as f:
+            f.write(json.dumps(status))
             f.write("\n")
         i+=1
-
         #print(psutil.net_io_counters())
 
-    #print(get_report())
+    analysis = process_report(get_report(report_file))
+    
+    with open(analysis_file, "w+") as f:
+        f.write(json.dumps(analysis))
+
+    print(analysis)
