@@ -4,6 +4,7 @@ import psutil
 import sys
 import datetime
 import math
+import json
 
 
 def get_cpu_temperature():
@@ -13,7 +14,6 @@ def get_cpu_temperature():
     output, _ = process.communicate()
     return output
     """
-
     try:
         return psutil.sensors_temperatures()['cpu_thermal'][0].current
     except:
@@ -22,7 +22,6 @@ def get_cpu_temperature():
 def get_status():
     memory = psutil.virtual_memory()
     disk = psutil.disk_usage('/')
-    # Divide from Bytes -> KB -> MB
     return {
         "timestamp": str(datetime.datetime.now()),
         "cpu":{
@@ -39,26 +38,46 @@ def get_status():
             "free":round(disk.free/1024.0/1024.0/1024.0,1),
             "total": round(disk.total/1024.0/1024.0/1024.0,1),
             "percent": disk.percent
-        }
-        
-
+        }  
     }
 
+def get_report():
+    report = []
+    report_file = "probe-report.txt"
+
+    with open(report_file, "r") as f:
+        lines = f.readlines()
+
+    for l in lines:
+        report.append(json.loads(l))
+
+    return report
+
 if __name__ == "__main__":
+
+    report = "probe-report.txt"
     delta = 1
     end = math.inf
     try:
-        delta = sys.argv[1]
+        delta = float(sys.argv[1])
     except:
         pass
     try:
-        end = sys.argv[2]
+        end = int(sys.argv[2])
     except:
         pass
+
+    with open(report, "w+") as f:
+        pass
+
     i = 0
     while i < end:
         time.sleep(delta)
-        print(get_status())
+        with open(report, "a+") as f:
+            f.write(json.dumps(get_status()))
+            f.write("\n")
         i+=1
 
         #print(psutil.net_io_counters())
+
+    #print(get_report())
