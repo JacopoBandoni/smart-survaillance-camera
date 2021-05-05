@@ -14,7 +14,7 @@ def compare(imgA, imgB):
 from flask import current_app
 
 def worker(app, frames_dir):
-    print("WORKER: Online")
+    #print("WORKER: Online")
     try:
         os.mkdir(frames_dir)
     except OSError:
@@ -45,7 +45,7 @@ def worker(app, frames_dir):
             current_app.config["CONTROLLER_LOCK"].release()
 
             frame = camera.get_frame()
-            print("WORKER: Click!")
+            #print("WORKER: Click!")
 
 
             difference = 0
@@ -56,7 +56,7 @@ def worker(app, frames_dir):
                     last = cv2.imread(current_app.config["FRAMES_DIR"]+"/"+last)
                     new = cv2.imdecode(np.fromstring(frame, np.uint8), cv2.IMREAD_COLOR)
                     difference = compare(last, new)
-                    print("WORKER: Difference: "+str(difference))
+                    #print("WORKER: Difference: "+str(difference))
 
             if difference <= threshold:
                 
@@ -71,7 +71,7 @@ def worker(app, frames_dir):
                 last_sending = old_last_sending
 
                 if(now - last_timer >= tdelta or cnt >= server_ratio):
-                    print("WORKER: Sending...")
+                    #print("WORKER: Sending...")
                     try:
                         requests.post(server_url, data=frame, headers={
                             "Content-Type":"image/jpeg",
@@ -100,7 +100,8 @@ def worker(app, frames_dir):
                 current_app.config["LAST_FRAME_LOCK"].release()
 
             else:
-                print("WORKER: Above the threshold ("+str(threshold)+")...")
+                #print("WORKER: Above the threshold ("+str(threshold)+")...")
+                pass
 
 if __name__ == "__main__":
     from camera import IPCamera, VirtualCamera
