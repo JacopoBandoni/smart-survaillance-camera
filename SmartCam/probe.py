@@ -79,7 +79,7 @@ def process_report(report):
                     #"values": a,
                     "min": min(a),
                     "max": max(a),
-                    "avg": statistics.fmean(a),
+                    "avg": statistics.mean(a),
                     "stdev": statistics.stdev(a)
                 }
     
