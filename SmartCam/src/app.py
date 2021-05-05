@@ -2,6 +2,7 @@ import configparser
 import logging
 import sys
 import os
+import psutil
 
 from datetime import datetime
 
@@ -18,7 +19,7 @@ from src.worker import worker
 ID = "raspberry"
 THIS_CAMERA = None #IPCamera("192.168.1.6:8080")
 SERVER_URL = "http://localhost:5000/frames" #"https://mcpserver.eu.pythonanywhere.com/frames" 
-CAP_TIMER = 0
+CAP_TIMER = 5
 SERVER_TIMER = 10
 SERVER_RATIO = 4
 THRESHOLD = 0.9
@@ -144,6 +145,67 @@ def post_controller():
         current_app.config["THRESHOLD"] = req["threshold"]
 
     current_app.config["CONTROLLER_LOCK"].release()
+
+    return get_controller()
+
+def get_cpu_temperature():
+    try:
+        return psutil.sensors_temperatures()['cpu_thermal'][0].current
+    except:
+        return None
+
+def get_status():
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    return {
+        "timestamp": {
+            "value":str(datetime.now()),
+            "unit": "%Y-%m-%d %H:%M:%S.%f"
+        },
+        "cpu":{
+            "percent": {
+                "value": psutil.cpu_percent(0.1),
+                "unit": "%"
+            },
+            "frequency": {
+                "value": psutil.cpu_freq().current,
+                "unit":"Mhz",
+            },
+	        "temperature": {
+                "value": get_cpu_temperature(),
+                "unit": "degrees Celsius"
+            },
+        },
+        "memory":{
+            "free": {
+                "value": round(memory.available/1024.0/1024.0,1),
+                "unit": "MB"
+            },
+            "total": {
+                "value": round(memory.total/1024.0/1024.0,1),
+                "unit": "MB"
+            },
+            "percent": {
+                "value": memory.percent,
+                "unit": "%"
+            },
+        },
+        "disk":{
+            "free": {
+                "value": round(disk.free/1024.0/1024.0/1024.0,1),
+                "unit": "GB"
+            },
+            "total": {
+                "value": round(disk.total/1024.0/1024.0/1024.0,1),
+                "unit": "GB"
+            },
+            "percent": {
+                "value": disk.percent,
+                "unit": "%"
+            },
+        }  
+    }
+    
 
 
 def get_config(configuration=None):

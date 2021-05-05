@@ -89,6 +89,19 @@ paths:
         400:
           description: Bad request
 
+  /status:
+    get:
+      tags:
+        - Controller
+      summary: Get the SmartCam Status
+      operationId: app.get_status
+      responses:
+        200:
+          description: Get the SmartCam Status
+
+
+
+
 components:
   schemas:
     Controller:
