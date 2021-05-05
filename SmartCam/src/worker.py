@@ -63,7 +63,6 @@ def worker(app, frames_dir):
                 now = datetime.datetime.now()
                 cnt += 1
                 
-
                 current_app.config["CONTROLLER_LOCK"].acquire()
                 current_app.config["LAST_CAP"] = str(now)
                 old_last_sending = current_app.config["LAST_SENDING"]
