@@ -56,13 +56,13 @@ def local_stream(frames_dir,begin=None, end=None):
         try:
             begin = datetime.strptime(begin, '%Y-%m-%d %H:%M:%S.%f')
         except:
-            pass
+            begin = None
 
     if end is not None:
         try:
             end = datetime.strptime(end, '%Y-%m-%d %H:%M:%S.%f')
         except:
-            pass
+            end = None
 
     for (filename,timestamp) in frames:
         if begin is None or timestamp >= begin:
