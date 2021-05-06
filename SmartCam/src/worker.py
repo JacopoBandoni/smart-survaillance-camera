@@ -68,7 +68,7 @@ def worker(app, frames_dir):
             current_app.config["CONTROLLER_LOCK"].release()
 
             frame = camera.get_frame()
-            print("WORKER: Click!")
+            #print("WORKER: Click!")
 
 
             difference = 0
