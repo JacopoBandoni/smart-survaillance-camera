@@ -19,8 +19,8 @@ from src.worker import worker
 ID = "raspberry"
 THIS_CAMERA = None #IPCamera("192.168.1.6:8080")
 SERVER_URL = "http://localhost:5000/frames"#"https://mcpserver.eu.pythonanywhere.com/frames"#
-CAP_TIMER = 1
-SERVER_TIMER = 5
+CAP_TIMER = 0
+SERVER_TIMER = 0
 SERVER_RATIO = 10
 THRESHOLD = 0.9
 

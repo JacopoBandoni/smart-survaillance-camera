@@ -22,7 +22,7 @@ SERVER_URL = "http://localhost:5000/frames"#"https://mcpserver.eu.pythonanywhere
 CAP_TIMER = 1
 SERVER_TIMER = 5
 SERVER_RATIO = 10
-THRESHOLD = 0.9
+THRESHOLD = 1
 
 FRAMES_DIR = None
 
