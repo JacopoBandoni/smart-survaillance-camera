@@ -5,26 +5,27 @@ case "$1" in
         pip3 install -r requirements.txt
         ;;
     "exp")
-        sleep 900
         
-        python3 probe.py 0.25 1200 f experiments/probe0.report.txt experiments/probe0.analysis.txt
-        sleep 900
-
+        #sleep 300
+        
+        #python3 probe.py 0.25 1200 f experiments/probe0.report.txt experiments/probe0.analysis.txt
+        #sleep 300
+    
         python3 src/app1.py &
         sleep 5
         python3 probe.py 0.25 1200 f experiments/probe1.report.txt experiments/probe1.analysis.txt
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry ./experiments/frames_size.txt
         rm -r ./frames-raspberry
-        sleep 900
-
+        sleep 300
+        """
         python3 src/app1O.py &
         sleep 5
         python3 probe.py 0.25 1200 f experiments/probe1O.report.txt experiments/probe1O.analysis.txt
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry ./experiments/frames_size.txt
         rm -r ./frames-raspberry
-        sleep 900
+        sleep 300
 
         python3 src/app2.py &
         sleep 5
@@ -32,7 +33,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry ./experiments/frames_size.txt
         rm -r ./frames-raspberry
-        sleep 900
+        sleep 300
 
         python3 src/app2O.py &
         sleep 5
@@ -40,7 +41,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry ./experiments/frames_size.txt
         rm -r ./frames-raspberry
-        sleep 900
+        sleep 300
 
         python3 src/app3.py &
         sleep 5
@@ -48,7 +49,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry ./experiments/frames_size.txt
         rm -r ./frames-raspberry
-        sleep 900
+        sleep 300
 
         python3 src/app3O.py &
         sleep 5
@@ -56,7 +57,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry ./experiments/frames_size.txt
         rm -r ./frames-raspberry
-        
+        """
         ;;
     "")
         python3 src/app.py
