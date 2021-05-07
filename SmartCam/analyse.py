@@ -47,7 +47,7 @@ def show(d, attribute, field, labels):
     plt.show()
 
 if __name__ == "__main__":
-    path = "experiments/2"
+    path = "experiments/3"
     labels,d = digest(path)
 
     with open(path+"/digest.txt","w+") as f:
