@@ -32,21 +32,74 @@ def digest(path):
 
     return labels,data
 
-def show(d, attribute, field, labels):
-    X_axis = np.arange(len(labels))
+def reports(path):
+    files = []
+    analysis = {}
+    data = {}
+    for f in os.listdir(path):
+        if "report" in f:
+            files.append(f)
+    files.sort()
 
-    space = [-0.3,-0.1,0.1,0.3]
-    i = 0
-    for k in d[attribute][field]:
-            plt.bar(X_axis+space[i], d[attribute][field][k], 0.2, label = k)
-            i+=1
-    
-    plt.xticks(X_axis, labels)
-    plt.title(attribute+"-"+field)
-    plt.legend()
-    plt.show()
+    for f in files:
+        label = ((f.split("."))[0]).replace("probe","Trial").replace("O", " Opt.").replace("Trial0","Control")
+        analysis[label] = []
+        with open(path+"/"+f,"r") as file:
+            for l in file.readlines():
+                analysis[label].append(json.loads(l))
+
+
+    data = {}
+    for a,ls in analysis.items():
+        data[a] = {}
+        for sample in ls:
+            for attribute,field in sample.items():
+                if attribute != "timestamp":
+                    if attribute not in data[a]:
+                        data[a][attribute] = {}
+                    for k,v in field.items():
+                        if k not in data[a][attribute]:
+                            data[a][attribute][k] = []
+                        (data[a][attribute][k]).append(v)
+
+    values = {}
+    for label,data in data.items():
+        for attribute,field in data.items():
+            if attribute not in values:
+                values[attribute] = {}
+            for k,v in field.items():
+                if k not in values[attribute]:
+                    values[attribute][k] = {}
+                values[attribute][k][label] = v
+
+    return values
 
 if __name__ == "__main__":
+
+    report = reports("experiments")
+    
+    for attribute,fields in report.items():
+        for field,label in fields.items():
+            if field != "total":# and field != "free":
+                for l,v in label.items():
+                    if field == "percent":
+                        plt.ylabel("%")
+                    elif field == "frequency":
+                        plt.ylabel("MHz")
+                    elif field == "temperature":
+                        plt.ylabel("degrees Celsius")
+                    elif attribute == "disk":
+                        plt.ylabel("GB")
+                    elif attribute == "memory":
+                        plt.ylabel("MB")
+                    plt.plot(v[::12], label=l)
+
+                plt.legend()
+                plt.title(attribute+"-"+field)
+                plt.tight_layout()
+                plt.savefig("./results/c-"+attribute+"-"+field+".png", dpi=199)
+                plt.show()
+
     path = "experiments"
 
     try:
@@ -81,7 +134,7 @@ if __name__ == "__main__":
                 plt.xticks(range(len(newlabels)), newlabels)
                 plt.title(attribute+"-"+field)
                 plt.tight_layout()
-                plt.savefig("./results/"+attribute+"-"+field+".png", dpi=199)
+                plt.savefig("./results/h-"+attribute+"-"+field+".png", dpi=199)
                 plt.show()
 
     with open(path+"/frames_size.txt","r") as f:
