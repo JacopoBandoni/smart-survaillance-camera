@@ -16,7 +16,7 @@ def digest(path):
     for f in files:
         with open(path+"/"+f,"r") as file:
             analysis.append(json.loads(file.read()))
-        labels.append((f.split("."))[0])
+        labels.append(((f.split("."))[0]).replace("probe","Trial").replace("O", " Opt.").replace("Trial0","Control"))
 
     for a in analysis:
         for attribute,fields in a.items():
@@ -47,17 +47,20 @@ def show(d, attribute, field, labels):
     plt.show()
 
 if __name__ == "__main__":
-    path = "experiments/3"
-    labels,d = digest(path)
-
-    with open(path+"/digest.txt","w+") as f:
-        json.dump(d,f)
+    path = "experiments"
 
     try:
         os.mkdir("./results")
     except:
         pass
-    
+
+    labels,d = digest(path)
+    newlabels = [labels[i] for i in [0, 2, 1, 4, 3, 6, 5]]
+    #newlabels = labels
+
+    with open(path+"/digest.txt","w+") as f:
+        json.dump(d,f)
+
     for attribute in d:
         for field in d[attribute]:
             if field != "total":# and field != "free":
@@ -71,14 +74,37 @@ if __name__ == "__main__":
                     plt.ylabel("GB")
                 elif attribute == "memory":
                     plt.ylabel("MB")
-                plt.bar(range(len(labels)),d[attribute][field]["avg"])
-                plt.xticks(range(len(labels)), labels)
+
+                data = [d[attribute][field]["avg"][i] for i in [0, 2, 1, 4, 3, 6, 5]]
+                #data = d[attribute][field]["avg"]
+                plt.bar(range(len(newlabels)),data, color=["#75a927","#bc1142"])
+                plt.xticks(range(len(newlabels)), newlabels)
                 plt.title(attribute+"-"+field)
-                plt.savefig("./results/"+attribute+"-"+field+".png")
+                plt.tight_layout()
+                plt.savefig("./results/"+attribute+"-"+field+".png", dpi=199)
                 plt.show()
+
+    with open(path+"/frames_size.txt","r") as f:
+        data = f.readlines()
+
+    sizes = []
+    for d in data:
+        sizes.append(float(d.replace("\n",""))/1024.0)
+
+    newsizes = [sizes[i] for i in [1, 0, 3, 2, 5, 4]]
+    #newsizes = sizes
+
+    plt.bar(range(len(newlabels[1:])),newsizes,color=["#75a927","#bc1142"])
+    plt.xticks(range(len(newlabels[1:])), newlabels[1:])
+    plt.title("local frames-size")
+    plt.ylabel("MB")
+    plt.savefig("./results/local frames-size.png")
+    plt.show()
 
     """
     plt.bar(range(len(labels)),d["cpu"]["percent"]["avg"])
     plt.xticks(range(len(labels)), labels)
     plt.show()
     """
+
+    
