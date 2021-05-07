@@ -6,10 +6,10 @@ case "$1" in
         ;;
     "exp")
         
-        #sleep 300
+        sleep 300
         
-        #python3 probe.py 0.25 1200 f experiments/probe0.report.txt experiments/probe0.analysis.txt
-        #sleep 300
+        python3 probe.py 0.25 1200 f experiments/probe0.report.txt experiments/probe0.analysis.txt
+        sleep 300
     
         python3 src/app1.py &
         sleep 5
@@ -18,7 +18,7 @@ case "$1" in
         python3 frames_size.py ./frames-raspberry ./experiments/frames_size.txt
         rm -r ./frames-raspberry
         sleep 300
-        """
+        
         python3 src/app1O.py &
         sleep 5
         python3 probe.py 0.25 1200 f experiments/probe1O.report.txt experiments/probe1O.analysis.txt
@@ -57,7 +57,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry ./experiments/frames_size.txt
         rm -r ./frames-raspberry
-        """
+    
         ;;
     "")
         python3 src/app.py
