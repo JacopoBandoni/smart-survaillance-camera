@@ -151,7 +151,7 @@ if __name__ == "__main__":
     plt.xticks(range(len(newlabels[1:])), newlabels[1:])
     plt.title("local frames-size")
     plt.ylabel("MB")
-    plt.savefig("./results/local frames-size.png")
+    plt.savefig("./results/local frames-size.png", dpi=199)
     plt.show()
 
     """
