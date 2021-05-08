@@ -21,7 +21,7 @@ THIS_CAMERA = None #IPCamera("192.168.1.6:8080")
 SERVER_URL = "https://mcpserver1.eu.pythonanywhere.com/frames"#"http://localhost:5000/frames"#"https://mcpserver.eu.pythonanywhere.com/frames"
 CAP_TIMER = 1
 SERVER_TIMER = 5
-SERVER_RATIO = 999
+SERVER_RATIO = 9999
 THRESHOLD = 0.9
 
 FRAMES_DIR = None

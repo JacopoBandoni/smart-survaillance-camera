@@ -6,10 +6,10 @@ case "$1" in
         ;;
     "exp")
         
-        sleep 900
+        sleep 300
         
         python3 probe.py 0.25 1200 f experiments/probe0.report.txt experiments/probe0.analysis.txt
-        sleep 900
+        sleep 300
     
         python3 src/app1.py &
         sleep 5
@@ -17,7 +17,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry1 ./experiments/frames_size.txt
         rm -r ./frames-raspberry1
-        sleep 900
+        sleep 300
         
         python3 src/app1O.py &
         sleep 5
@@ -25,7 +25,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry1o ./experiments/frames_size.txt
         rm -r ./frames-raspberry1o
-        sleep 900
+        sleep 300
 
         python3 src/app2.py &
         sleep 5
@@ -33,7 +33,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry2 ./experiments/frames_size.txt
         rm -r ./frames-raspberry2
-        sleep 900
+        sleep 300
 
         python3 src/app2O.py &
         sleep 5
@@ -41,7 +41,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry2o ./experiments/frames_size.txt
         rm -r ./frames-raspberry2o
-        sleep 900
+        sleep 300
 
         python3 src/app3.py &
         sleep 5
@@ -49,7 +49,7 @@ case "$1" in
         pkill -f "python3"
         python3 frames_size.py ./frames-raspberry3 ./experiments/frames_size.txt
         rm -r ./frames-raspberry3
-        sleep 900
+        sleep 300
 
         python3 src/app3O.py &
         sleep 5
