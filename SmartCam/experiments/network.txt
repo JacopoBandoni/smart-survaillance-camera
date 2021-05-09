@@ -1,0 +1,1 @@
+{ "Trial1": { "Total":89838443, "Bandwidth":299461.4766666667 }, "Trial1 Opt.":{ "Total":3892780, "Bandwidth":12975.933333333332 }, "Trial2":{ "Total":58888951, "Bandwidth":196296.50333333333 }, "Trial2 Opt.":{ "Total":3443425, "Bandwidth":11478.083333333334 }, "Trial3":{ "Total":15753719, "Bandwidth":52512.39666666667 }, "Trial3 Opt.":{ "Total":3169509, "Bandwidth":10565.03 } }

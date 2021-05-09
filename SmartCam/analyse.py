@@ -75,7 +75,6 @@ def reports(path):
     return values
 
 if __name__ == "__main__":
-
     report = reports("experiments")
     
     for attribute,fields in report.items():
@@ -113,7 +112,7 @@ if __name__ == "__main__":
 
     with open(path+"/digest.txt","w+") as f:
         json.dump(d,f)
-
+    
     for attribute in d:
         for field in d[attribute]:
             if field != "total":# and field != "free":
@@ -147,12 +146,41 @@ if __name__ == "__main__":
     newsizes = [sizes[i] for i in [1, 0, 3, 2, 5, 4]]
     #newsizes = sizes
 
-    plt.bar(range(len(newlabels[1:])),newsizes,color=["#75a927","#bc1142"])
+    plt.bar(range(len(newlabels[1:])),newsizes,color=["#bc1142","#75a927"])
     plt.xticks(range(len(newlabels[1:])), newlabels[1:])
     plt.title("local frames-size")
     plt.ylabel("MB")
     plt.savefig("./results/local frames-size.png", dpi=199)
     plt.show()
+
+    
+    with open(path+"/network.txt","r") as f:
+        data = json.loads(f.read())
+
+    values = {}
+    for trial in data:
+        for k,v in data[trial].items():
+            if k not in values:
+                values[k] = []
+            values[k].append(float(v)/1024.0/1024.0)
+
+    for k,v in values.items():
+        newv = [v[i] for i in [1, 0, 3, 2, 5, 4]]
+        #newsizes = sizes
+
+        plt.bar(range(len(newlabels[1:])),newv,color=["#bc1142","#75a927"])
+        plt.xticks(range(len(newlabels[1:])), newlabels[1:])
+        if k == "Total":
+            plt.title("megabytes-sent")
+            plt.ylabel("MB")
+            plt.savefig("./results/megabytes-sent.png", dpi=199)
+        else:
+            plt.title(k.lower())
+            plt.ylabel("MB/s")
+            plt.savefig("./results/"+k.lower()+".png", dpi=199)
+        plt.show()
+
+
 
     """
     plt.bar(range(len(labels)),d["cpu"]["percent"]["avg"])
