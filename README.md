@@ -9,7 +9,7 @@ By compromising on the video quality or additional memory requirements for the v
 
 - enabling to scale real time video survaillance up to a thousand of videocameras in the same network
 
-## Project:
+## Project:
 
 This repository implements a demo of the previous approach and it is composed by three parts:
 
